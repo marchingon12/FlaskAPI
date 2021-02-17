@@ -1,5 +1,6 @@
 from flask import Flask
 from bs4 import BeautifulSoup
+from markupsafe import escape
 import requests as r
 import constants as url
 import datetime
@@ -14,14 +15,21 @@ def index():
     return "Congratulations, it's a web app!"
 
 
-def get_data():
-    """Get folder data in json."""
+@app.route("/hello")
+def hello():
 
-    if route == "/AuroraStore/Stable/api":
+    return "Hello, world!"
+
+
+@app.route("/path/<path:subpath>")
+def get_data(subpath):
+    """Get folder structure data in json."""
+
+    if subpath == "/AuroraStore/Stable/api/":
         link = url.STORE_STABLE
-    elif route == "/AuroraStore/Nightly/api":
+    elif subpath == "/AuroraStore/Nightly/api/":
         link = url.STORE_NIGHLY
-    elif route == "/AuroraDroid/Stable/api":
+    elif subpath == "/AuroraDroid/Stable/api/":
         link = url.DROID_STORE
     else:
         link = url.STORE_STABLE
@@ -29,10 +37,11 @@ def get_data():
     html_data = r.get(link).text
     soup = BeautifulSoup(html_data, features="html.parser")
     jsondata = [{}]
+    count = 0
 
     for td in soup.find_all("tr"):
         # fb-n: <a href="/AuroraStore/Stable/AuroraStore_x.x.x.apk">AuroraStore_x.x.x.apk</a>
-        # fb-d: 2021-01-08 03:36
+        # fb-d: YYYY-DD-MM HH:MM
         version = td.find("td", class_="fb-n")
         date = td.find("td", class_="fb-d")
         if version and date:
