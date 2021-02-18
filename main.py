@@ -8,30 +8,18 @@ import json
 
 
 app = Flask(__name__)
-app.config['JSON_SORT_KEYS'] = False
-
-
-@app.route("/")
-def index():
-
-    return "Congratulations, it's a web app!"
-
-
-@app.route("/hello")
-def hello():
-
-    return "Hello, world!"
+app.config["JSON_SORT_KEYS"] = False
 
 
 @app.route("/<path:subpath>")
 def get_data(subpath):
     """Get folder structure data in json."""
 
-    if subpath == "/AuroraStore/Stable/api/":
+    if subpath == "AuroraStore/Stable/api/":
         link = url.STORE_STABLE
-    elif subpath == "/AuroraStore/Nightly/api/":
+    elif subpath == "AuroraStore/Nightly/api/":
         link = url.STORE_NIGHLY
-    elif subpath == "/AuroraDroid/Stable/api/":
+    elif subpath == "AuroraDroid/Stable/api/":
         link = url.DROID_STORE
     else:
         link = url.STORE_STABLE
@@ -49,13 +37,15 @@ def get_data(subpath):
         date = td.find("td", class_="fb-d")
         if version and date:
             try:
+                jsondata["data"].append(
+                    {
+                        "id": f"{count}",
+                        "filename": version.text,
+                        "datetime": date.text,
+                        "downloadUrl": f"{link}{version.text}",
+                    }
+                )
                 count += 1
-                jsondata["data"].append({
-                    "id": count,
-                    "filename": version.text,
-                    "datetime": datetime.datetime.strptime(date.text, "%Y-%m-%d %H:%M"),
-                    "downloadUrl": f"{link}{version.text}",
-                })
             except ValueError:
                 pass
 
@@ -67,8 +57,17 @@ def get_latest(subpath):
     """Get latest version from jsondata"""
 
     jsondata = get_data(subpath)
-    latest_version = sorted(jsondata.keys(), reverse=True)[0]
-    return latest_version
+    latest_data = json.loads(jsondata, sort_keys=True)
+
+    while jsondata != len(jsondata["data"]):
+        lastest_version = {
+            "id": f"{latest_data['id']}",
+            "filename": f"{latest_data['filename']}",
+            "datetime": f"{latest_data['datetime']}",
+            "downloadUrl": f"{latest_data['downloadUrl']}",
+        }
+
+    return lastest_version
 
 
 if __name__ == "__main__":
