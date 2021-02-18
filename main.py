@@ -4,6 +4,7 @@ from markupsafe import escape
 import requests as r
 import constants as url
 import datetime
+import json
 
 
 app = Flask(__name__)
@@ -21,7 +22,7 @@ def hello():
     return "Hello, world!"
 
 
-@app.route("/path/<path:subpath>")
+@app.route("/<path:subpath>")
 def get_data(subpath):
     """Get folder structure data in json."""
 
@@ -36,7 +37,7 @@ def get_data(subpath):
 
     html_data = r.get(link).text
     soup = BeautifulSoup(html_data, features="html.parser")
-    jsondata = [{}]
+    jsondata = {}
     count = 0
 
     for td in soup.find_all("tr"):
@@ -53,12 +54,21 @@ def get_data(subpath):
                     "datetime": datetime.datetime.strptime(date.text, "%Y-%m-%d %H:%M"),
                     "downloadUrl": f"{link}{version.text}",
                 }
+                # reverse data since it's upside down
+                # jsondata = sorted(jsondata.keys(), reverse=True)
             except ValueError:
                 pass
-    # latest_date = sorted(jsondata.keys(), reverse=True)[0]
-    # latest_version = jsondata[latest_date]
 
     return jsondata
+
+
+@app.route("/<path:subpath>/latest/")
+def get_latest(subpath):
+    """Get latest version from jsondata"""
+
+    jsondata = get_data(subpath)
+    latest_version = sorted(jsondata.keys(), reverse=True)[0]
+    return latest_version
 
 
 if __name__ == "__main__":
