@@ -8,6 +8,7 @@ import json
 
 
 app = Flask(__name__)
+app.config['JSON_SORT_KEYS'] = False
 
 
 @app.route("/")
@@ -38,6 +39,7 @@ def get_data(subpath):
     html_data = r.get(link).text
     soup = BeautifulSoup(html_data, features="html.parser")
     jsondata = {}
+    jsondata.setdefault("data", [])
     count = 0
 
     for td in soup.find_all("tr"):
@@ -48,14 +50,12 @@ def get_data(subpath):
         if version and date:
             try:
                 count += 1
-                jsondata = {
+                jsondata["data"].append({
                     "id": count,
                     "filename": version.text,
                     "datetime": datetime.datetime.strptime(date.text, "%Y-%m-%d %H:%M"),
                     "downloadUrl": f"{link}{version.text}",
-                }
-                # reverse data since it's upside down
-                # jsondata = sorted(jsondata.keys(), reverse=True)
+                })
             except ValueError:
                 pass
 
