@@ -1,3 +1,7 @@
 STORE_STABLE = "https://auroraoss.com/AuroraStore/Stable/"
 STORE_NIGHLY = "https://auroraoss.com/AuroraStore/Nightly/"
-DROID_STORE = "https://auroraoss.com/AuroraDroid/Stable/"
+DROID_STABLE = "https://auroraoss.com/AuroraDroid/Stable/"
+DROID_NIGHTLY = "https://auroraoss.com/AuroraDroid/Nightly/"
+WARDEN_STABLE = "https://auroraoss.com/Warden/Stable/"
+WARDEN_SCRIPTS = "https://auroraoss.com/Warden/Scripts/"
+WALLS_STABLE = "https://auroraoss.com/Wallpapers/Stable/"

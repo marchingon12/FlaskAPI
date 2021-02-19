@@ -20,9 +20,15 @@ def get_data(subpath):
     elif subpath == "AuroraStore/Nightly/api/":
         link = url.STORE_NIGHLY
     elif subpath == "AuroraDroid/Stable/api/":
-        link = url.DROID_STORE
+        link = url.DROID_STABLE
+    elif subpath == "AuroraDroid/Nightly/api/":
+        link = url.DROID_NIGHTLY
+    elif subpath == "Warden/Stable/api/":
+        link = url.WARDEN_STABLE
+    elif subpath == "Wallpapers/Stable/api/":
+        link = url.WALLS_STABLE
     else:
-        link = url.STORE_STABLE
+        return "Unknown path"
 
     html_data = r.get(link).text
     soup = BeautifulSoup(html_data, features="html.parser")
@@ -40,9 +46,15 @@ def get_data(subpath):
                 jsondata["data"].append(
                     {
                         "id": f"{count}",
+                        "type": "downloads",
                         "filename": version.text,
-                        "datetime": date.text,
-                        "downloadUrl": f"{link}{version.text}",
+                        "tag_name": version.text.lstrip("AuroaSteDidnighlys_-").rstrip(
+                            ".apk"
+                        ),
+                        "datetime": datetime.datetime.strptime(
+                            date.text, "%Y-%m-%d %H:%M"
+                        ),
+                        "download_url": f"{link}{version.text}",
                     }
                 )
                 count += 1
@@ -59,15 +71,58 @@ def get_latest(subpath):
     jsondata = get_data(subpath)
     latest_data = json.loads(jsondata, sort_keys=True)
 
-    while jsondata != len(jsondata["data"]):
-        lastest_version = {
-            "id": f"{latest_data['id']}",
-            "filename": f"{latest_data['filename']}",
-            "datetime": f"{latest_data['datetime']}",
-            "downloadUrl": f"{latest_data['downloadUrl']}",
-        }
+    # search for latest by using id?
+    while jsondata["id"]["data"] != len(jsondata["data"]):
+        try:
+            lastest_version = {
+                "id": f"{latest_data['id']}",
+                "type": f"{latest_data['type']}",
+                "filename": f"{latest_data['filename']}",
+                "tag_name": f"{latest_data['tag_name']}",
+                "datetime": f"{latest_data['datetime']}",
+                "download_url": f"{latest_data['download_url']}",
+            }
+        except ValueError:
+            pass
 
     return lastest_version
+
+
+@app.route("/Warden/Scripts/api/")
+def get_scripts():
+    """Get Warden scripts"""
+
+    link = url.WARDEN_SCRIPTS
+    html_data = r.get(link).text
+    soup = BeautifulSoup(html_data, features="html.parser")
+    jsondata = {}
+    jsondata.setdefault("data", [])
+    count = 0
+
+    for td in soup.find_all("tr"):
+        # fb-n: <a href="/Warden/Scripts/-.json">-.json</a>
+        # fb-d: YYYY-DD-MM HH:MM
+        script = td.find("td", class_="fb-n")
+        date = td.find("td", class_="fb-d")
+        if script and date:
+            try:
+                jsondata["data"].append(
+                    {
+                        "id": f"{count}",
+                        "type": "scripts",
+                        "filename": script.text,
+                        "tag_name": script.text.rstrip(".json"),
+                        "datetime": datetime.datetime.strptime(
+                            date.text, "%Y-%m-%d %H:%M"
+                        ),
+                        "download_url": f"{link}{script.text}",
+                    }
+                )
+                count += 1
+            except ValueError:
+                pass
+
+    return jsondata
 
 
 if __name__ == "__main__":
