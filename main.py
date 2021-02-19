@@ -48,7 +48,7 @@ def get_data(subpath):
                         "id": f"{count}",
                         "type": "downloads",
                         "filename": version.text,
-                        "tag_name": version.text.lstrip("AuroaSteDidnighlys_-").rstrip(
+                        "tag_name": version.text.lstrip("ASDadeghilnorstuy_-").rstrip(
                             ".apk"
                         ),
                         "datetime": datetime.datetime.strptime(
