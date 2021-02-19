@@ -54,7 +54,7 @@ def get_data(subpath):
                         "datetime": datetime.datetime.strptime(
                             date.text, "%Y-%m-%d %H:%M"
                         ),
-                        "url": f"https://auroraoss.com/{subpath}",
+                        "url": f"{link}api/",
                         "download_url": f"{link}{version.text}",
                     }
                 )
@@ -75,8 +75,7 @@ def get_latest(subpath):
         link = url.DROID_STABLE
 
     jsondata = get_data(subpath)
-    latest_data = r.get(jsondata).json()
-    latest_version = {}
+    latest_data = {}
 
     if link == url.STORE_STABLE:
         text = r.get(url.GITHUB_STORE).json()
@@ -84,24 +83,24 @@ def get_latest(subpath):
         text = r.get(url.GITHUB_DROID).json()
 
     # search for latest by using id?
-    while jsondata["id"]["data"] != len(jsondata["data"]):
+    while f"{jsondata['data']['id']}" != len(jsondata["data"]):
         try:
-            latest_version["latest"].append(
+            latest_data["latest"].append(
                 {
-                    "id": f"{latest_data['id']}",
-                    "type": f"{latest_data['type']}",
-                    "name": f"{latest_data['name']}",
-                    "tag_name": f"{latest_data['tag_name']}",
-                    "datetime": f"{latest_data['datetime']}",
-                    "url": f"https://auroraoss.com/{subpath}/latest/",
-                    "download_url": f"{latest_data['download_url']}",
+                    "id": f"{jsondata['id']}",
+                    "type": f"{jsondata['type']}",
+                    "name": f"{jsondata['name']}",
+                    "tag_name": f"{jsondata['tag_name']}",
+                    "datetime": f"{jsondata['datetime']}",
+                    "url": f"{subpath}api/latest/",
+                    "download_url": f"{jsondata['download_url']}",
                     "body": f"{text['body']}",
                 }
             )
         except ValueError:
             pass
 
-    return latest_version
+    return latest_data
 
 
 @app.route("/Warden/Scripts/api/")
@@ -131,7 +130,7 @@ def get_scripts():
                         "datetime": datetime.datetime.strptime(
                             date.text, "%Y-%m-%d %H:%M"
                         ),
-                        "url": f"https://auroraoss.com/Warden/Scripts/api/",
+                        "url": f"{link}api/",
                         "download_url": f"{link}{script.text}",
                     }
                 )
