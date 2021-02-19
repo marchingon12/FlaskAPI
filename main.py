@@ -47,10 +47,10 @@ def get_data(subpath):
                     {
                         "id": f"{count}",
                         "type": "downloads",
-                        "filename": version.text,
-                        "tag_name": version.text.lstrip("ASDadeghilnorstuy_-").rstrip(
-                            ".apk"
-                        ),
+                        "name": version.text,
+                        "tag_name": version.text.lstrip(
+                            "ASDWadeghilnoprstuywv_-"
+                        ).rstrip(".apk"),
                         "datetime": datetime.datetime.strptime(
                             date.text, "%Y-%m-%d %H:%M"
                         ),
@@ -77,7 +77,7 @@ def get_latest(subpath):
             lastest_version = {
                 "id": f"{latest_data['id']}",
                 "type": f"{latest_data['type']}",
-                "filename": f"{latest_data['filename']}",
+                "name": f"{latest_data['name']}",
                 "tag_name": f"{latest_data['tag_name']}",
                 "datetime": f"{latest_data['datetime']}",
                 "download_url": f"{latest_data['download_url']}",
@@ -110,7 +110,7 @@ def get_scripts():
                     {
                         "id": f"{count}",
                         "type": "scripts",
-                        "filename": script.text,
+                        "name": script.text,
                         "tag_name": script.text.rstrip(".json"),
                         "datetime": datetime.datetime.strptime(
                             date.text, "%Y-%m-%d %H:%M"
