@@ -75,7 +75,6 @@ def get_latest(subpath):
         link = url.DROID_STABLE
 
     jsondata = get_data(subpath)
-    latest_data = {}
 
     if link == url.STORE_STABLE:
         text = r.get(url.GITHUB_STORE).json()
@@ -85,18 +84,16 @@ def get_latest(subpath):
     # search for latest by using id?
     while f"{jsondata['data']['id']}" != len(jsondata["data"]):
         try:
-            latest_data["latest"].append(
-                {
-                    "id": f"{jsondata['id']}",
-                    "type": f"{jsondata['type']}",
-                    "name": f"{jsondata['name']}",
-                    "tag_name": f"{jsondata['tag_name']}",
-                    "datetime": f"{jsondata['datetime']}",
-                    "url": f"{subpath}api/latest/",
-                    "download_url": f"{jsondata['download_url']}",
-                    "body": f"{text['body']}",
-                }
-            )
+            latest_data = {
+                "id": f"{jsondata['id']}",
+                "type": f"{jsondata['type']}",
+                "name": f"{jsondata['name']}",
+                "tag_name": f"{jsondata['tag_name']}",
+                "datetime": f"{jsondata['datetime']}",
+                "url": f"{subpath}api/latest/",
+                "download_url": f"{jsondata['download_url']}",
+                "body": f"{text['body']}",
+            }
         except ValueError:
             pass
 
