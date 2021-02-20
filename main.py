@@ -15,17 +15,17 @@ app.config["JSON_SORT_KEYS"] = False
 def get_data(subpath):
     """Get folder structure data in json."""
 
-    if subpath == "AuroraStore/Stable/api/":
+    if subpath.startswith("AuroraStore/Stable"):
         link = url.STORE_STABLE
-    elif subpath == "AuroraStore/Nightly/api/":
+    elif subpath.startswith("AuroraStore/Nightly"):
         link = url.STORE_NIGHLY
-    elif subpath == "AuroraDroid/Stable/api/":
+    elif subpath.startswith("AuroraDroid/Stable"):
         link = url.DROID_STABLE
-    elif subpath == "AuroraDroid/Nightly/api/":
+    elif subpath.startswith("AuroraDroid/Nightly"):
         link = url.DROID_NIGHTLY
-    elif subpath == "Warden/Stable/api/":
+    elif subpath.startswith("Warden/Stable"):
         link = url.WARDEN_STABLE
-    elif subpath == "Wallpapers/Stable/api/":
+    elif subpath.startswith("Wallpapers/Stable"):
         link = url.WALLS_STABLE
     else:
         return "Unknown path"
@@ -41,7 +41,7 @@ def get_data(subpath):
         # fb-d: YYYY-DD-MM HH:MM
         version = td.find("td", class_="fb-n")
         date = td.find("td", class_="fb-d")
-        if version and date:
+        if version and date.text != "":
             try:
                 jsondata["data"].append(
                     {
@@ -51,9 +51,7 @@ def get_data(subpath):
                         "tag_name": version.text.lstrip(
                             "ASDWadeghilnoprstuywv_-"
                         ).rstrip(".apk"),
-                        "datetime": datetime.datetime.strptime(
-                            date.text, "%Y-%m-%d %H:%M"
-                        ),
+                        "datetime": date.text,
                         "url": f"{link}api/",
                         "download_url": f"{link}{version.text}",
                     }
@@ -69,12 +67,11 @@ def get_data(subpath):
 def get_latest(subpath):
     """Get latest version from jsondata"""
 
-    if subpath == "AuroraStore/Stable/api":
+    link = ""
+    if subpath.startswith("AuroraStore"):
         link = url.STORE_STABLE
-    elif subpath == "AuroraDroid/Stable/api":
+    elif subpath.startswith("AuroraDroid"):
         link = url.DROID_STABLE
-
-    jsondata = get_data(subpath)
 
     if link == url.STORE_STABLE:
         text = r.get(url.GITHUB_STORE).json()
@@ -82,22 +79,25 @@ def get_latest(subpath):
         text = r.get(url.GITHUB_DROID).json()
 
     # search for latest by using id?
-    while f"{jsondata['data']['id']}" != len(jsondata["data"]):
-        try:
-            latest_data = {
-                "id": f"{jsondata['id']}",
-                "type": f"{jsondata['type']}",
-                "name": f"{jsondata['name']}",
-                "tag_name": f"{jsondata['tag_name']}",
-                "datetime": f"{jsondata['datetime']}",
-                "url": f"{subpath}api/latest/",
-                "download_url": f"{jsondata['download_url']}",
-                "body": f"{text['body']}",
-            }
-        except ValueError:
-            pass
+    jsondata = get_data(subpath)["data"][-1]
 
-    return latest_data
+    try:
+        return {
+            "name": jsondata["name"],
+            "url": f"{subpath}api/latest/",
+            "assets": [
+                {
+                    "id": jsondata["id"],
+                    "type": jsondata["type"],
+                    "tag_name": jsondata["tag_name"],
+                    "datetime": jsondata["datetime"],
+                    "download_url": jsondata["download_url"],
+                    "body": text["body"],
+                }
+            ],
+        }
+    except ValueError:
+        return {"message": "An error occured!"}
 
 
 @app.route("/Warden/Scripts/api/")
