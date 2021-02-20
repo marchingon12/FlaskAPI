@@ -25,7 +25,7 @@ def get_data(subpath):
         link = url.DROID_NIGHTLY
     elif subpath.startswith("Warden/Stable"):
         link = url.WARDEN_STABLE
-    elif subpath.startswith("Wallpapers/Stable"):
+    elif subpath.startswith("Wallpapers"):
         link = url.WALLS_STABLE
     else:
         return "Unknown path"
@@ -58,7 +58,7 @@ def get_data(subpath):
                 )
                 count += 1
             except ValueError:
-                pass
+                return "Unknown error occured"
 
     return jsondata
 
@@ -68,33 +68,45 @@ def get_latest(subpath):
     """Get latest version from jsondata"""
 
     link = ""
-    if subpath.startswith("AuroraStore"):
+    if subpath.startswith("AuroraStore/Stable"):
         link = url.STORE_STABLE
-    elif subpath.startswith("AuroraDroid"):
+    elif subpath.startswith("AuroraStore/Nightly"):
+        link = url.STORE_NIGHLY
+    elif subpath.startswith("AuroraDroid/Stable"):
         link = url.DROID_STABLE
+    elif subpath.startswith("AuroraDroid/Nightly"):
+        link = url.DROID_NIGHTLY
+    elif subpath.startswith("Warden"):
+        link = url.WARDEN_STABLE
+    elif subpath.startswith("Wallpapers"):
+        link = url.WALLS_STABLE
 
     if link == url.STORE_STABLE:
         text = r.get(url.GITHUB_STORE).json()
     elif link == url.DROID_STABLE:
         text = r.get(url.GITHUB_DROID).json()
+    else:
+        text = {"body": "No changelog available"}
 
     # search for latest by using id?
     jsondata = get_data(subpath)["data"][-1]
 
     try:
         return {
-            "name": jsondata["name"],
-            "url": f"{subpath}api/latest/",
+            "url": f"{link}api/latest/",
+            "name": "",
+            "id": "0",
+            "tag_name": jsondata["tag_name"],
             "assets": [
                 {
                     "id": jsondata["id"],
                     "type": jsondata["type"],
-                    "tag_name": jsondata["tag_name"],
+                    "name": jsondata["name"],
                     "datetime": jsondata["datetime"],
                     "download_url": jsondata["download_url"],
-                    "body": text["body"],
                 }
             ],
+            "body": text["body"],
         }
     except ValueError:
         return {"message": "An error occured!"}
