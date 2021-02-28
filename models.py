@@ -11,7 +11,7 @@ class Build:
     def __init__(self, id, name, timestamp, size, download_url):
         self.id = id
         self.name = name
-        self.timestamp = timestamp * 1000
+        self.timestamp = int(timestamp * 1000)
         self.datetime = get_formatted_date(timestamp)
         self.size = size
         self.download_url = download_url
