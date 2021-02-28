@@ -1,3 +1,6 @@
-# API to list available apk files in JSON
+# Simple API for auroraoss GET requests
 
-made for auroraoss
+A simple API written in python3 with Flask.
+
+
+made for :copyright:AuroraOSS
