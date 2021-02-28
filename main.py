@@ -1,155 +1,141 @@
-from flask import Flask
-from bs4 import BeautifulSoup
-from markupsafe import escape
-import requests as r
-import constants as url
-import datetime
 import json
+import os
+import re
 
+import requests
+from flask import Flask
+from flask import jsonify
+from flask_cors import CORS
+
+import constants
+from models import Build
 
 app = Flask(__name__)
 app.config["JSON_SORT_KEYS"] = False
+CORS(app)
+
+gitlab_token = "API_KEY_GOES_HERE"
 
 
-@app.route("/<path:subpath>")
-def get_data(subpath):
-    """Get folder structure data in json."""
+@app.route("/")
+def status():
+    return "Aurora OSS App distribution API"
 
-    if subpath.startswith("AuroraStore/Stable"):
-        link = url.STORE_STABLE
-    elif subpath.startswith("AuroraStore/Nightly"):
-        link = url.STORE_NIGHLY
-    elif subpath.startswith("AuroraDroid/Stable"):
-        link = url.DROID_STABLE
-    elif subpath.startswith("AuroraDroid/Nightly"):
-        link = url.DROID_NIGHTLY
-    elif subpath.startswith("Warden/Stable"):
-        link = url.WARDEN_STABLE
-    elif subpath.startswith("Wallpapers"):
-        link = url.WALLS_STABLE
+
+@app.route("/<path:sub_path>")
+def get_data(sub_path):
+    build_list = get_all_builds(sub_path)
+    # Serialize all builds
+    build_list_serialized = []
+    for build in build_list:
+        build_list_serialized.append(build.serialize())
+
+    return jsonify(build_list_serialized)
+
+
+@app.route("/<path:subpath>/Latest/")
+def get_latest_build(subpath):
+    if subpath.startswith("AuroraStore"):
+        name = "AuroraStore"
+        project_id = constants.AURORA_STORE_ID
+    elif subpath.startswith("AuroraDroid"):
+        name = "AuroraDroid"
+        project_id = constants.AURORA_DROID_ID
+    elif subpath.startswith("AuroraWallpaper"):
+        name = "AuroraWallpaper"
+        project_id = constants.AURORA_WALLPAPER
+    elif subpath.startswith("AppWarden"):
+        name = "AppWarden"
+        project_id = constants.APP_WARDEN
     else:
-        return "Unknown path"
+        return jsonify("Hupp!'}")
 
-    html_data = r.get(link).text
-    soup = BeautifulSoup(html_data, features="html.parser")
-    jsondata = {}
-    jsondata.setdefault("data", [])
-    count = 0
+    changelog_ = get_changelog(project_id)
+    asset = get_local_latest(subpath)
 
-    for td in soup.find_all("tr"):
-        # fb-n: <a href="/AuroraStore/Stable/AuroraStore_x.x.x.apk">AuroraStore_x.x.x.apk</a>
-        # fb-d: YYYY-DD-MM HH:MM
-        version = td.find("td", class_="fb-n")
-        date = td.find("td", class_="fb-d")
-        if version and date.text != "":
-            try:
-                jsondata["data"].append(
-                    {
-                        "id": f"{count}",
-                        "type": "downloads",
-                        "name": version.text,
-                        "tag_name": version.text.lstrip(
-                            "ASDWadeghilnoprstuywv_-"
-                        ).rstrip(".apk"),
-                        "datetime": date.text,
-                        "url": f"{link}api/",
-                        "download_url": f"{link}{version.text}",
-                    }
-                )
-                count += 1
-            except ValueError:
-                return "Unknown error occured"
+    result = {
+        "id": project_id,
+        "name": name,
+        "changelog": changelog_,
+        "asset": asset
+    }
 
-    return jsondata
+    return result
 
 
-@app.route("/<path:subpath>/latest/")
-def get_latest(subpath):
-    """Get latest version from jsondata"""
+def get_changelog(project_id):
+    request = requests.get(constants.COMMIT_ENDPOINT.format(project_id),
+                           headers={"PRIVATE-TOKEN": gitlab_token})
+    result = request.content
+    response = json.loads(result)
 
-    link = ""
-    if subpath.startswith("AuroraStore/Stable"):
-        link = url.STORE_STABLE
-    elif subpath.startswith("AuroraStore/Nightly"):
-        link = url.STORE_NIGHLY
-    elif subpath.startswith("AuroraDroid/Stable"):
-        link = url.DROID_STABLE
-    elif subpath.startswith("AuroraDroid/Nightly"):
-        link = url.DROID_NIGHTLY
-    elif subpath.startswith("Warden"):
-        link = url.WARDEN_STABLE
-    elif subpath.startswith("Wallpapers"):
-        link = url.WALLS_STABLE
+    changelog = {
+        "general": [],
+        "bugfix": [],
+        "translations": []
+    }
 
-    if link == url.STORE_STABLE:
-        text = r.get(url.GITHUB_STORE).json()
-    elif link == url.DROID_STABLE:
-        text = r.get(url.GITHUB_DROID).json()
-    else:
-        text = {"body": "No changelog available"}
+    for node in response:
+        title = str(node["title"])
+        # Add all commits having keyword `fix` to `bugfixes`
+        if re.search("fix", title, re.IGNORECASE):
+            changelog["bugfix"].append(title)
+        # Add all commits having keyword `POEditor` to `translations`
+        elif re.search("POEditor.com", title, re.IGNORECASE):
+            changelog["translations"].append(title)
+        # Add otherwise to `general`
+        else:
+            changelog["general"].append(title)
 
-    # search for latest by using id?
-    jsondata = get_data(subpath)["data"][-1]
+    # Build a single-line changelog string
+    body = "### General\r\n{}### BugFix\r\n{}### Translations{}".format(" * ".join(changelog["general"]),
+                                                                        " * ".join(changelog["bugfix"]),
+                                                                        " * ".join(changelog["translations"]))
+    changelog["body"] = body
 
-    try:
-        return {
-            "url": f"{link}api/latest/",
-            "name": "",
-            "id": "0",
-            "tag_name": jsondata["tag_name"],
-            "assets": [
-                {
-                    "id": jsondata["id"],
-                    "type": jsondata["type"],
-                    "name": jsondata["name"],
-                    "datetime": jsondata["datetime"],
-                    "download_url": jsondata["download_url"],
-                }
-            ],
-            "body": text["body"],
-        }
-    except ValueError:
-        return {"message": "An error occured!"}
+    return changelog
 
 
-@app.route("/Warden/Scripts/api/")
-def get_scripts():
-    """Get Warden scripts"""
+def get_local_latest(sub_path):
+    # Get all available builds
+    build_list = get_all_builds(sub_path)
+    # Sort builds based on timestamp data
+    build_list.sort(key=lambda x: x.timestamp, reverse=True)
+    # Return latest serialized build
+    return build_list[0].serialize()
 
-    link = url.WARDEN_SCRIPTS
-    html_data = r.get(link).text
-    soup = BeautifulSoup(html_data, features="html.parser")
-    jsondata = {}
-    jsondata.setdefault("data", [])
-    count = 0
 
-    for td in soup.find_all("tr"):
-        # fb-n: <a href="/Warden/Scripts/-.json">-.json</a>
-        # fb-d: YYYY-DD-MM HH:MM
-        script = td.find("td", class_="fb-n")
-        date = td.find("td", class_="fb-d")
-        if script and date:
-            try:
-                jsondata["data"].append(
-                    {
-                        "id": f"{count}",
-                        "type": "scripts",
-                        "name": script.text,
-                        "tag_name": script.text.rstrip(".json"),
-                        "datetime": datetime.datetime.strptime(
-                            date.text, "%Y-%m-%d %H:%M"
-                        ),
-                        "url": f"{link}api/",
-                        "download_url": f"{link}{script.text}",
-                    }
-                )
-                count += 1
-            except ValueError:
-                pass
+def get_all_builds(subpath):
+    path = "../www/" + subpath
+    build_list = []
+    i = 0
 
-    return jsondata
+    # Iterate through all builds & generate model list
+    for filename in os.listdir(path):
+        # Filter only APks, least like any other file type will appear, but still
+        if filename.endswith(".apk"):
+            relative_path = os.path.join(path, filename)
+            timestamp = os.path.getmtime(relative_path)
+            size = os.path.getsize(relative_path)
+
+            # Parse file as build
+            build = Build(
+                id=i,
+                name=filename,
+                timestamp=timestamp,
+                size=size,
+                download_url="{}/{}/{}".format(constants.BASE_URL, subpath, filename)
+            )
+
+            i = i + 1
+
+            # Add build to available build list
+            build_list.append(build)
+
+    return build_list
 
 
 if __name__ == "__main__":
-    app.run()
-    # app.run(host="127.0.0.1", port=8080, debug=True)
+    # app.run()
+    # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context='adhoc')
+    app.run(host="0.0.0.0", port=5555, debug=False, ssl_context=('cert.pem', 'key.pem'))
