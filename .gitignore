@@ -1,4 +1,14 @@
-venv
+# VSCode configs
 .vscode
-test.py
-__pycache__
+
+# Environment files
+.env
+.flaskenv
+env/
+env*
+
+# Python misc files
+__pycache__/
+*.py[cod]
+.cache/
+.pytest_cache/
