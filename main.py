@@ -25,11 +25,18 @@ def status():
 
 @app.route("/<path:sub_path>")
 def get_data(sub_path):
-    build_list = get_all_builds(sub_path)
-    # Serialize all builds
-    build_list_serialized = []
-    for build in build_list:
-        build_list_serialized.append(build.serialize())
+    try:
+        build_list = get_all_builds(sub_path)
+        # Serialize all builds
+        build_list_serialized = []
+        # if iter(build_list) is True:
+        try:
+            for build in build_list:
+                build_list_serialized.append(build.serialize())
+        except TypeError:
+            return "Directory is empty"
+    except FileNotFoundError:
+        return "File or directory not found!"
 
     return jsonify(build_list_serialized)
 
@@ -49,7 +56,7 @@ def get_latest_build(subpath):
         name = "AppWarden"
         project_id = constants.APP_WARDEN
     else:
-        return jsonify("Non-existent path!'}")
+        return jsonify("Non-existent path!")
 
     changelog_ = get_changelog(project_id)
     asset = get_local_latest(subpath)
@@ -95,7 +102,10 @@ def get_local_latest(sub_path):
     # Get all available builds
     build_list = get_all_builds(sub_path)
     # Sort builds based on timestamp data
-    build_list.sort(key=lambda x: x.timestamp, reverse=True)
+    try:
+        build_list.sort(key=lambda x: x.timestamp, reverse=True)
+    except AttributeError:
+        return f"Assets unavailable - unsortable list detected! Either files are non-existent in directory or files are in wrong path. Check data in parent url: {sub_path}"
     # Return latest serialized build
     return build_list[0].serialize()
 
@@ -127,10 +137,13 @@ def get_all_builds(subpath):
             # Add build to available build list
             build_list.append(build)
 
-    return build_list
+    if not build_list:
+        return jsonify("List is empty!")
+    else:
+        return build_list
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=8085, debug=True)
     # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context='adhoc')
     # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context=('cert.pem', 'key.pem'))
