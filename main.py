@@ -12,9 +12,10 @@ from models import Build
 
 app = Flask(__name__)
 app.config["JSON_SORT_KEYS"] = False
+app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
 CORS(app)
 
-gitlab_token = "API_KEY_GOES_HERE"
+GITLAB_TOKEN = os.environ.get("API_KEY")
 
 
 @app.route("/")
@@ -48,51 +49,45 @@ def get_latest_build(subpath):
         name = "AppWarden"
         project_id = constants.APP_WARDEN
     else:
-        return jsonify("Hupp!'}")
+        return jsonify("Non-existent path!'}")
 
     changelog_ = get_changelog(project_id)
     asset = get_local_latest(subpath)
 
-    result = {
-        "id": project_id,
-        "name": name,
-        "changelog": changelog_,
-        "asset": asset
-    }
+    result = {"id": project_id, "name": name, "changelog": changelog_, "asset": asset}
 
     return result
 
 
 def get_changelog(project_id):
-    request = requests.get(constants.COMMIT_ENDPOINT.format(project_id),
-                           headers={"PRIVATE-TOKEN": gitlab_token})
+    request = requests.get(
+        constants.COMMIT_ENDPOINT.format(project_id),
+        headers={"PRIVATE-TOKEN": GITLAB_TOKEN},
+    )
     result = request.content
     response = json.loads(result)
 
-    changelog = {
-        "general": [],
-        "bugfix": [],
-        "translations": []
-    }
+    changelog = {"general": [], "bugfix": [], "translations": []}
 
     for node in response:
         title = str(node["title"])
         # Add all commits having keyword `fix` to `bugfixes`
         if re.search("fix", title, re.IGNORECASE):
             changelog["bugfix"].append(title)
-        # Add all commits having keyword `POEditor` to `translations`
-        elif re.search("POEditor.com", title, re.IGNORECASE):
+        # Add all commits having keyword `Weblate` to `translations`
+        elif re.search("Weblate", title, re.IGNORECASE):
             changelog["translations"].append(title)
         # Add otherwise to `general`
         else:
             changelog["general"].append(title)
 
     # Build a single-line changelog string
-    body = "### General\r\n{}### BugFix\r\n{}### Translations{}".format(" * ".join(changelog["general"]),
-                                                                        " * ".join(changelog["bugfix"]),
-                                                                        " * ".join(changelog["translations"]))
+    body = "### General\r\n{}### BugFix\r\n{}### Translations{}".format(
+        " * ".join(changelog["general"]),
+        " * ".join(changelog["bugfix"]),
+        " * ".join(changelog["translations"]),
+    )
     changelog["body"] = body
-
     return changelog
 
 
@@ -106,7 +101,7 @@ def get_local_latest(sub_path):
 
 
 def get_all_builds(subpath):
-    path = "../www/" + subpath
+    path = "../h5ai/" + subpath
     build_list = []
     i = 0
 
@@ -124,7 +119,7 @@ def get_all_builds(subpath):
                 name=filename,
                 timestamp=timestamp,
                 size=size,
-                download_url="{}/{}/{}".format(constants.BASE_URL, subpath, filename)
+                download_url="{}/{}/{}".format(constants.BASE_URL, subpath, filename),
             )
 
             i = i + 1
@@ -136,6 +131,6 @@ def get_all_builds(subpath):
 
 
 if __name__ == "__main__":
-    # app.run()
+    app.run(host="0.0.0.0", port=8080, debug=True)
     # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context='adhoc')
-    app.run(host="0.0.0.0", port=5555, debug=False, ssl_context=('cert.pem', 'key.pem'))
+    # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context=('cert.pem', 'key.pem'))
