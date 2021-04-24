@@ -138,7 +138,7 @@ def get_all_builds(subpath):
                 name=filename,
                 timestamp=timestamp,
                 size=size,
-                download_url="{}/{}/{}".format(constants.BASE_URL, subpath, filename),
+                download_url="{}/{}/{}".format(constants.DL_URL, subpath, filename),
             )
 
             i = i + 1

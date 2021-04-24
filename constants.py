@@ -2,6 +2,7 @@
 COMMIT_ENDPOINT = "https://gitlab.com/api/v4/projects/{}/repository/commits"
 
 BASE_URL = "https://auroraoss.com"
+DL_URL = "https://files.auroraoss.com"
 
 # PROJECT_ID
 AURORA_STORE_ID = "6922885"
