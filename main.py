@@ -6,7 +6,7 @@ try:
     from flask_cors import CORS
     from gevent.pywsgi import WSGIServer
 except:
-    os.system("pip3 install -r requirements")
+    os.system("pip3 install -r requirements.txt")
     from flask import Flask
     from flask import jsonify
     from flask_cors import CORS
