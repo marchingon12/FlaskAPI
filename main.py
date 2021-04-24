@@ -155,7 +155,7 @@ def get_all_builds(subpath):
 if __name__ == "__main__":
     # app.run(host="0.0.0.0", port=8085, debug=True)
     app.debug = False 
-    http_server = WSGIServer(('', 8085), app, keyfile='key.pem', certfile='cert.pem')
+    http_server = WSGIServer(('', 8085), app)
     http_server.serve_forever()
     # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context='adhoc')
     # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context=('cert.pem', 'key.pem'))
