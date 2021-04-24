@@ -1,13 +1,22 @@
-import json
 import os
+# install the most important stuff
+try:
+    from flask import Flask
+    from flask import jsonify
+    from flask_cors import CORS
+    from gevent.pywsgi import WSGIServer
+except:
+    os.system("pip3 install -r requirements")
+    from flask import Flask
+    from flask import jsonify
+    from flask_cors import CORS
+    from gevent.pywsgi import WSGIServer
+
+import json
 import re
-
 import requests
-from flask import Flask
-from flask import jsonify
-from flask_cors import CORS
-
 import constants
+
 from models import Build
 
 app = Flask(__name__)
@@ -144,6 +153,9 @@ def get_all_builds(subpath):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8085, debug=True)
+    # app.run(host="0.0.0.0", port=8085, debug=True)
+    app.debug = False 
+    http_server = WSGIServer(('', 8085), app, keyfile='key.pem', certfile='cert.pem')
+    http_server.serve_forever()
     # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context='adhoc')
     # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context=('cert.pem', 'key.pem'))
