@@ -103,11 +103,21 @@ def get_changelog(project_id):
         else:
             changelog["general"].append(title)
 
-    # Build a single-line changelog string
-    body = "### General{}\r\n### BugFix{}\r\n### Translations\r\n{}".format(
-        "\r\n- ".join(changelog["general"]) + "\r\n",
-        "\r\n- ".join(changelog["bugfix"]) + "\r\n",
-        "\r\n- ".join(changelog["translations"]) + "\r\n",
+    # If nothing changed, display appropriate message
+    if not changelog["general"]:
+        changelog["general"].append("Nothing was changed in general!")
+    if not changelog["bugfix"]:
+        changelog["bugfix"].append("No bugs were squashed this time!")
+    if not changelog["translations"]:
+        changelog["translations"].append("No translation updates!")
+
+    # Build a single-line changelog string with bullet points
+    body = (
+        "### General\r\n- {}\r\n### BugFix\r\n- {}\r\n### Translations\r\n- {}".format(
+            "\r\n- ".join(changelog["general"]) + "\r\n",
+            "\r\n- ".join(changelog["bugfix"]) + "\r\n",
+            "\r\n- ".join(changelog["translations"]) + "\r\n",
+        )
     )
     changelog["body"] = body
     return changelog
