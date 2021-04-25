@@ -70,7 +70,7 @@ def get_latest_build(subpath):
     changelog_ = get_changelog(project_id)
     assets = get_local_latest(subpath)
 
-    result = {"id": project_id, "name": name, "changelog": changelog_, "assets": assets}
+    result = {"id": project_id, "name": name, "changelog": changelog_, "assets": [assets]}
 
     return result
 
