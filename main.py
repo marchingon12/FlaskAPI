@@ -1,4 +1,5 @@
 import os
+
 # install the most important stuff
 try:
     from flask import Flask
@@ -70,7 +71,12 @@ def get_latest_build(subpath):
     changelog_ = get_changelog(project_id)
     assets = get_local_latest(subpath)
 
-    result = {"id": project_id, "name": name, "changelog": changelog_, "assets": [assets]}
+    result = {
+        "id": project_id,
+        "name": name,
+        "changelog": changelog_,
+        "assets": [assets],
+    }
 
     return result
 
@@ -98,7 +104,7 @@ def get_changelog(project_id):
             changelog["general"].append(title)
 
     # Build a single-line changelog string
-    body = "### General\r\n{}### BugFix\r\n{}### Translations{}".format(
+    body = "### General\r\n{}### BugFix\r\n{}### Translations\r\n{}".format(
         " * ".join(changelog["general"]),
         " * ".join(changelog["bugfix"]),
         " * ".join(changelog["translations"]),
@@ -154,8 +160,8 @@ def get_all_builds(subpath):
 
 if __name__ == "__main__":
     # app.run(host="0.0.0.0", port=8085, debug=True)
-    app.debug = False 
-    http_server = WSGIServer(('', 8085), app)
+    app.debug = False
+    http_server = WSGIServer(("", 8085), app)
     http_server.serve_forever()
     # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context='adhoc')
     # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context=('cert.pem', 'key.pem'))
