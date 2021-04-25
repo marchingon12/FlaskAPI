@@ -4,7 +4,7 @@ import json
 
 def get_formatted_date(timestamp):
     date_time = datetime.datetime.fromtimestamp(timestamp)
-    return date_time.strftime('%d-%m-%Y %H:%M:%S')
+    return date_time.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
 class Build:
