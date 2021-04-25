@@ -8,9 +8,10 @@ def get_formatted_date(timestamp):
 
 
 class Build:
-    def __init__(self, id, name, timestamp, size, download_url):
+    def __init__(self, id, name, tag_name, timestamp, size, download_url):
         self.id = id
         self.name = name
+        self.tag_name = tag_name
         self.timestamp = int(timestamp * 1000)
         self.datetime = get_formatted_date(timestamp)
         self.size = size
@@ -23,6 +24,7 @@ class Build:
         return {
             "id": self.id,
             "name": self.name,
+            "tag_name": self.tag_name,
             "timestamp": self.timestamp,
             "datetime": self.datetime,
             "size": self.size,

@@ -152,6 +152,7 @@ def get_all_builds(subpath):
             build = Build(
                 id=i,
                 name=filename,
+                tag_name=re.findall("([0-9]+[.]+[0-9]+[.]+[0-9])", filename)[0],
                 timestamp=timestamp,
                 size=size,
                 download_url="{}/{}/{}".format(constants.DL_URL, subpath, filename),
