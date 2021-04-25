@@ -104,10 +104,10 @@ def get_changelog(project_id):
             changelog["general"].append(title)
 
     # Build a single-line changelog string
-    body = "### General\r\n{}### BugFix\r\n{}### Translations\r\n{}".format(
-        " * ".join(changelog["general"]),
-        " * ".join(changelog["bugfix"]),
-        " * ".join(changelog["translations"]),
+    body = "### General{}\r\n### BugFix{}\r\n### Translations\r\n{}".format(
+        "\r\n- ".join(changelog["general"]) + "\r\n",
+        "\r\n- ".join(changelog["bugfix"]) + "\r\n",
+        "\r\n- ".join(changelog["translations"]) + "\r\n",
     )
     changelog["body"] = body
     return changelog
