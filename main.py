@@ -5,7 +5,7 @@ try:
     from flask import jsonify
     from flask_cors import CORS
     from gevent.pywsgi import WSGIServer
-except:
+except as ImportError:
     os.system("pip3 install -r requirements.txt")
     from flask import Flask
     from flask import jsonify
@@ -68,9 +68,9 @@ def get_latest_build(subpath):
         return jsonify("Non-existent path!")
 
     changelog_ = get_changelog(project_id)
-    asset = get_local_latest(subpath)
+    assets = get_local_latest(subpath)
 
-    result = {"id": project_id, "name": name, "changelog": changelog_, "asset": asset}
+    result = {"id": project_id, "name": name, "changelog": changelog_, "assets": assets}
 
     return result
 
