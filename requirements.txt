@@ -3,4 +3,3 @@ requests
 datetime
 flask-cors
 python-dotenv
-gevent
