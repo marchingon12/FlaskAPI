@@ -78,11 +78,11 @@ def get_latest_build(subpath):
     elif subpath.startswith("AuroraDroid"):
         name = "AuroraDroid"
         project_id = constants.AURORA_DROID_ID
-    elif subpath.startswith("AuroraWallpaper"):
-        name = "AuroraWallpaper"
+    elif subpath.startswith("Wallpapers"):
+        name = "Wallpapers"
         project_id = constants.AURORA_WALLPAPER
-    elif subpath.startswith("AppWarden"):
-        name = "AppWarden"
+    elif subpath.startswith("Warden"):
+        name = "Warden"
         project_id = constants.APP_WARDEN
     else:
         return jsonify("Non-existent path!")
