@@ -8,13 +8,15 @@ def get_formatted_date(timestamp):
 
 
 class Build:
-    def __init__(self, id, name, tag_name, timestamp, size, download_url):
+    def __init__(self, id, name, tag_name, timestamp, size, md5_hash, sha256_hash, download_url):
         self.id = id
         self.name = name
         self.tag_name = tag_name
         self.timestamp = int(timestamp * 1000)
         self.datetime = get_formatted_date(timestamp)
         self.size = size
+        self.md5_hash = md5_hash
+        self.sha256_hash = sha256_hash
         self.download_url = download_url
 
     def __repr__(self):
@@ -28,5 +30,7 @@ class Build:
             "timestamp": self.timestamp,
             "datetime": self.datetime,
             "size": self.size,
+            "md5": self.md5_hash,
+            "sha256": self.sha256_hash,
             "download_url": self.download_url,
         }
