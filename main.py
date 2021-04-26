@@ -1,23 +1,32 @@
 import os
+import json
+import re
+import hashlib
 
-# install the most important stuff
+"""
+Import required modules otherwise install them using requirements.txt
+"""
 try:
     from flask import Flask
     from flask import jsonify
+    from flask import abort
+    from flask import redirect
+    from flask import request
+    from flask import url_for
     from flask_cors import CORS
-    from gevent.pywsgi import WSGIServer
+    import requests
 except ImportError:
     os.system("pip3 install -r requirements.txt")
     from flask import Flask
     from flask import jsonify
+    from flask import abort
+    from flask import redirect
+    from flask import request
+    from flask import url_for
     from flask_cors import CORS
-    from gevent.pywsgi import WSGIServer
+    import requests
 
-import json
-import re
-import requests
 import constants
-
 from models import Build
 
 app = Flask(__name__)
@@ -33,6 +42,11 @@ def status():
     return "Aurora OSS App distribution API"
 
 
+#####################
+#   Get Data List   #
+#####################
+
+
 @app.route("/<path:sub_path>")
 def get_data(sub_path):
     try:
@@ -46,9 +60,14 @@ def get_data(sub_path):
         except TypeError:
             return "Directory is empty"
     except FileNotFoundError:
-        return "File or directory not found!"
+        abort(404)
 
     return jsonify(build_list_serialized)
+
+
+######################
+#  Get Latest Build  #
+######################
 
 
 @app.route("/<path:subpath>/Latest/")
@@ -79,6 +98,11 @@ def get_latest_build(subpath):
     }
 
     return result
+
+
+"""
+Get the changelog for each corresponding Aurora app from Gitlab releases.
+"""
 
 
 def get_changelog(project_id):
@@ -135,6 +159,11 @@ def get_local_latest(sub_path):
     return build_list[0].serialize()
 
 
+"""
+Get the latest builds for corresponding Aurora app and show them in a list.
+"""
+
+
 def get_all_builds(subpath):
     path = "../h5ai/" + subpath
     build_list = []
@@ -148,13 +177,25 @@ def get_all_builds(subpath):
             timestamp = os.path.getmtime(relative_path)
             size = os.path.getsize(relative_path)
 
+            # Remove letter chars for tag names
+            if path.endswith("Nightly"):
+                tag = re.sub("[^0-9]", "", filename)
+            else:
+                tag = re.search("_(.*).apk", filename)[1]
+
+            # Calculate hashes
+            md5 = hasher("md5", filename, path)
+            sha256 = hasher("sha256", filename, path)
+
             # Parse file as build
             build = Build(
                 id=i,
                 name=filename,
-                tag_name=re.findall("([0-9]+[.]+[0-9]+[.]+[0-9])", filename)[0],
+                tag_name=tag,
                 timestamp=timestamp,
                 size=size,
+                md5_hash=md5,
+                sha256_hash=sha256,
                 download_url="{}/{}/{}".format(constants.DL_URL, subpath, filename),
             )
 
@@ -169,10 +210,74 @@ def get_all_builds(subpath):
         return build_list
 
 
+"""
+Simple hashing digest for apk files. This is provided to verify if the files provided are legitimate or not.
+"""
+
+
+def hasher(algorithm, filename, path):
+
+    apk_file = open(f"{path}/{filename}", "rb")
+
+    if algorithm == "md5":
+        md5_hash = hashlib.md5()
+        content = apk_file.read()
+        md5_hash.update(content)
+        md5 = md5_hash.hexdigest()
+        return md5
+
+    if algorithm == "sha256":
+        sha256_hash = hashlib.sha256()
+        content = apk_file.read()
+        sha256_hash.update(content)
+        sha256 = sha256_hash.hexdigest()
+        return sha256
+
+
+#####################
+#    Error Routes   #
+#####################
+
+
+@app.errorhandler(500)
+def server_error(e):
+    app.logger.error(f"Server error: {e}, route: {request.url}")
+    return redirect("/", code=301)
+
+
+@app.errorhandler(404)
+def file_error(e):
+    app.logger.error(f"Server error: {e}, route: {request.url}")
+    return redirect("/", code=301)
+
+
+@app.errorhandler(403)
+def forbidden_error(e):
+    app.logger.error(f"Server error: {e}, route: {request.url}")
+    return redirect("/", code=301)
+
+
+######################
+#  Error Simulation  #
+######################
+
+
+# @app.route("/simulate500")
+# def simulate500():
+#     abort(500)
+
+
+# @app.route("/simulate404")
+# def simulate404():
+#     abort(404)
+
+
+# @app.route("/simulate403")
+# def simulate403():
+#     abort(403)
+
+
 if __name__ == "__main__":
-    # app.run(host="0.0.0.0", port=8085, debug=True)
-    app.debug = False
-    http_server = WSGIServer(("", 8085), app)
-    http_server.serve_forever()
-    # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context='adhoc')
-    # app.run(host="0.0.0.0", port=5555, debug=False, ssl_context=('cert.pem', 'key.pem'))
+    app.run(host="127.0.0.1", port=8085, debug=False)
+    # app.run(host="127.0.0.1", port=8085, debug=False, ssl_context='adhoc')
+    # app.run(host="127.0.0.1", port=8085, debug=False, ssl_context=('cert.pem', 'key.pem'))
