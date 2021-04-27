@@ -79,10 +79,10 @@ def get_latest_build(subpath):
         name = "AuroraDroid"
         project_id = constants.AURORA_DROID_ID
     elif subpath.startswith("Wallpapers"):
-        name = "Wallpapers"
+        name = "AuroraWalls"
         project_id = constants.AURORA_WALLPAPER
     elif subpath.startswith("Warden"):
-        name = "Warden"
+        name = "AppWarden"
         project_id = constants.APP_WARDEN
     else:
         return jsonify("Non-existent path!")
@@ -180,12 +180,24 @@ def get_all_builds(subpath):
             # Remove letter chars for tag names
             if path.endswith("Nightly"):
                 tag = re.sub("[^0-9]", "", filename)
+            elif filename.startswith("AppWarden"):
+                tag = re.search("_v(.*).apk", filename)[1]
             else:
                 tag = re.search("_(.*).apk", filename)[1]
 
             # Calculate hashes
             md5 = hasher("md5", filename, path)
             sha256 = hasher("sha256", filename, path)
+
+            # Get Gitlab releases url
+            if filename.startswith("AuroraStore"):
+                gitlab = constants.RELEASES_URL.format("AuroraStore", tag)
+            if filename.startswith("AuroraDroid"):
+                gitlab = constants.RELEASES_URL.format("AuroraDroid", tag)
+            if filename.startswith("AppWarden"):
+                gitlab = constants.RELEASES_URL.format("AppWarden", tag)
+            if filename.startswith("AuroraWalls"):
+                gitlab = constants.RELEASES_URL.format("AuroraWallpapers", tag)
 
             # Parse file as build
             build = Build(
@@ -197,6 +209,7 @@ def get_all_builds(subpath):
                 md5_hash=md5,
                 sha256_hash=sha256,
                 download_url="{}/{}/{}".format(constants.DL_URL, subpath, filename),
+                gitlab_url=gitlab,
             )
 
             i = i + 1

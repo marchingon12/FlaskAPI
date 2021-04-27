@@ -8,7 +8,7 @@ def get_formatted_date(timestamp):
 
 
 class Build:
-    def __init__(self, id, name, tag_name, timestamp, size, md5_hash, sha256_hash, download_url):
+    def __init__(self, id, name, tag_name, timestamp, size, md5_hash, sha256_hash, download_url, gitlab_url):
         self.id = id
         self.name = name
         self.tag_name = tag_name
@@ -18,6 +18,7 @@ class Build:
         self.md5_hash = md5_hash
         self.sha256_hash = sha256_hash
         self.download_url = download_url
+        self.gitlab_url = gitlab_url
 
     def __repr__(self):
         return json.dumps({"name": self.name, "timestamp": self.timestamp})
@@ -33,4 +34,5 @@ class Build:
             "md5": self.md5_hash,
             "sha256": self.sha256_hash,
             "download_url": self.download_url,
+            "gitlab_url": self.gitlab_url,
         }

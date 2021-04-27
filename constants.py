@@ -1,5 +1,6 @@
 # Gitlab
 COMMIT_ENDPOINT = "https://gitlab.com/api/v4/projects/{}/repository/commits"
+RELEASES_URL = "https://gitlab.com/AuroraOSS/{}/-/releases/{}"
 
 BASE_URL = "https://auroraoss.com"
 DL_URL = "https://files.auroraoss.com"
